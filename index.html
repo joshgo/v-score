@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volleyball Match Studio App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #080c14;
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+    }
+    .glow-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glow-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+    }
+    .glow-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    button:disabled {
+      opacity: 0.4 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .preview-dark-bg {
+      background-color: #0d1117;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-3 md:p-6 max-w-[1600px] mx-auto">
+
+  <header class="w-full mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div class="flex items-center gap-3">
+      <div class="bg-gradient-to-tr from-blue-600 to-indigo-500 p-3 rounded-2xl shadow-lg shadow-blue-900/30">
+        <i class="fa-solid fa-volleyball text-2xl text-white"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+          Volleyball Match Studio
+        </h1>
+        <p class="text-xs text-slate-400 font-medium">Integrated Game Logger & Broadcast Overlay Renderer</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center bg-slate-900 p-1.5 rounded-2xl border border-slate-800 self-start md:self-auto">
+      <button id="tabBtnLogger" onclick="switchTab('logger')" class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all bg-blue-600 text-white shadow-lg">
+        <i class="fa-solid fa-list-check"></i> 1. Game Logger
+      </button>
+      <button id="tabBtnStudio" onclick="switchTab('studio')" class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> 2. Scoreboard Studio & Export
+      </button>
+    </div>
+  </header>
+
+  <div id="tabContentLogger" class="w-full flex-1 flex flex-col">
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+      
+      <!-- Controls Panel -->
+      <div class="lg:col-span-7 flex flex-col gap-5">
+        
+        <!-- Setup Inputs -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-blue-400"></i> Match Setup & Teams
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium">Team 1 Name</label>
+              <input type="text" id="team1Name" value="Team 1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium">Team 2 Name</label>
+              <input type="text" id="team2Name" value="Team 2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium">Event / League Title</label>
+              <input type="text" id="eventTitle" value="2026 ISSA 14U" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium">Match Date</label>
+              <input type="date" id="matchDate" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium">Match Start Time</label>
+              <input type="time" id="matchStartTime" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium">Sets To Win</label>
+              <select id="setsToWin" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+                <option value="2">Best of 3 (First to 2 sets)</option>
+                <option value="3">Best of 5 (First to 3 sets)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clock & Controls -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-center sm:text-left">
+            <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Match Timer</span>
+            <div id="timerDisplay" class="font-mono text-4xl sm:text-5xl font-extrabold text-blue-400 tracking-wider my-1">00:00</div>
+            <span id="currentSetLabel" class="text-xs font-semibold text-slate-400">Set 1 | Sets Score: 0 - 0</span>
+          </div>
+          
+          <div class="flex flex-wrap gap-2 justify-center">
+            <button id="btnStartMatch" onclick="startMatch()" class="glow-btn bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2">
+              <i class="fa-solid fa-play"></i> Start Match
+            </button>
+            <button id="btnToggleTimer" onclick="toggleTimer()" disabled class="glow-btn bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-50 font-semibold px-3 py-2.5 rounded-xl text-sm flex items-center gap-2">
+              <i id="pauseIcon" class="fa-solid fa-pause"></i> <span id="pauseText">Pause</span>
+            </button>
+            <button onclick="resetMatch()" class="glow-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-2.5 rounded-xl text-sm flex items-center gap-2 border border-slate-700">
+              <i class="fa-solid fa-rotate-left"></i> Reset Match
+            </button>
+            <button onclick="newMatch()" class="glow-btn bg-red-950/40 hover:bg-red-900/60 text-red-400 font-semibold px-3 py-2.5 rounded-xl text-sm flex items-center gap-2 border border-red-900/50">
+              <i class="fa-solid fa-trash-can"></i> New Match
+            </button>
+          </div>
+        </div>
+
+        <!-- Point Scoring Grid -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-gamepad text-blue-400"></i> Live Action Scoring Controls
+            </h2>
+            <span class="text-xs font-medium text-slate-400" id="serveIndicator">Active Serve: None</span>
+          </div>
+
+          <!-- Dynamic Team Layout Box -->
+          <div id="teamScoringGrid" class="grid grid-cols-2 gap-4 mb-4">
+            
+            <!-- Team Left Box -->
+            <div id="boxLeft" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center">
+              <span id="leftDisplayLabel" class="font-black text-2xl text-blue-400 tracking-wide uppercase truncate max-w-full my-1">TEAM 1</span>
+              <div id="leftScoreDisplay" class="font-mono text-6xl font-black my-2 text-white">0</div>
+              <div class="text-xs text-slate-400 mb-3 font-semibold">Sets Won: <span id="leftSetsWon">0</span></div>
+              
+              <button onclick="logPointForSlot('left')" id="btnPointLeft" disabled class="w-full glow-btn bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-2 rounded-xl text-xl shadow-lg flex flex-col items-center justify-center gap-0.5">
+                <span>+ POINT</span>
+                <span class="text-xs font-bold text-blue-200 uppercase tracking-wider" id="btnLeftTeamSub">TEAM 1</span>
+              </button>
+
+              <div class="grid grid-cols-2 gap-2 w-full mt-3">
+                <button onclick="setServeForSlot('left')" id="btnServeLeft" disabled class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-volleyball text-blue-400"></i> Serve
+                </button>
+                <button onclick="logTimeoutForSlot('left')" id="btnTimeoutLeft" disabled class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-clock text-blue-400"></i> Timeout
+                </button>
+              </div>
+            </div>
+
+            <!-- Team Right Box -->
+            <div id="boxRight" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center">
+              <span id="rightDisplayLabel" class="font-black text-2xl text-blue-400 tracking-wide uppercase truncate max-w-full my-1">TEAM 2</span>
+              <div id="rightScoreDisplay" class="font-mono text-6xl font-black my-2 text-white">0</div>
+              <div class="text-xs text-slate-400 mb-3 font-semibold">Sets Won: <span id="rightSetsWon">0</span></div>
+              
+              <button onclick="logPointForSlot('right')" id="btnPointRight" disabled class="w-full glow-btn bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-2 rounded-xl text-xl shadow-lg flex flex-col items-center justify-center gap-0.5">
+                <span>+ POINT</span>
+                <span class="text-xs font-bold text-blue-200 uppercase tracking-wider" id="btnRightTeamSub">TEAM 2</span>
+              </button>
+
+              <div class="grid grid-cols-2 gap-2 w-full mt-3">
+                <button onclick="setServeForSlot('right')" id="btnServeRight" disabled class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-volleyball text-blue-400"></i> Serve
+                </button>
+                <button onclick="logTimeoutForSlot('right')" id="btnTimeoutRight" disabled class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-clock text-blue-400"></i> Timeout
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-slate-800">
+            <button onclick="startSet()" id="btnStartSet" disabled class="bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700">
+              <i class="fa-solid fa-flag"></i> Start Set
+            </button>
+            <button onclick="logSwap()" id="btnSwap" class="bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700">
+              <i class="fa-solid fa-arrows-rotate"></i> Swap Sides
+            </button>
+            <button onclick="undoLastAction()" id="btnUndo" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700">
+              <i class="fa-solid fa-rotate-left text-blue-400"></i> Undo
+            </button>
+            <button onclick="endSet()" id="btnEndSet" disabled class="bg-slate-800 hover:bg-slate-700 text-blue-300 font-semibold py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700">
+              <i class="fa-solid fa-circle-check"></i> End Set
+            </button>
+            <button onclick="endMatch()" id="btnEndMatch" disabled class="col-span-2 sm:col-span-1 bg-blue-950/40 hover:bg-blue-900/60 text-blue-400 font-semibold py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 border border-blue-900/50">
+              <i class="fa-solid fa-trophy"></i> End Match
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual Score Override Panel -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square text-blue-400"></i> Manual Score Override
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium" id="overrideLeftLabel">Left Team Score</label>
+              <input type="number" id="overrideLeftInput" min="0" placeholder="0" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-medium" id="overrideRightLabel">Right Team Score</label>
+              <input type="number" id="overrideRightInput" min="0" placeholder="0" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="col-span-2 sm:col-span-1 flex items-end">
+              <button onclick="applyScoreOverride()" id="btnApplyOverride" disabled class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg transition-colors">
+                <i class="fa-solid fa-check"></i> Apply Override
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Broadcast Messages -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn text-blue-400"></i> Broadcast Banner Messages
+          </h2>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button onclick="setBannerMessage('TIMEOUT')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700">
+              TIMEOUT
+            </button>
+            <button onclick="setBannerMessage('UNDER REVIEW')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700">
+              UNDER REVIEW
+            </button>
+            <button onclick="setBannerMessage('SET POINT')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700">
+              SET POINT
+            </button>
+            <button onclick="setBannerMessage('MATCH POINT')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700">
+              MATCH POINT
+            </button>
+            <button onclick="setBannerMessage('CHALLENGE')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700">
+              CHALLENGE
+            </button>
+            <button onclick="clearBannerMessage()" class="bg-red-950/40 hover:bg-red-900/60 text-red-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-900/50">
+              Clear Banner
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="customBannerInput" placeholder="Enter custom message (e.g., PLAYER SUBSTITUTION)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <button onclick="applyCustomBannerMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-xl text-xs">
+              Apply Message
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CSV Log Textarea -->
+      <div class="lg:col-span-5 flex flex-col h-full">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-full min-h-[480px]">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-file-csv text-blue-400"></i> Event Output Log (CSV)
+            </h2>
+            <span id="lineCountBadge" class="text-xs font-mono text-slate-500">0 events</span>
+          </div>
+
+          <textarea id="csvLogOutput" oninput="onCSVLogEdited()" class="w-full flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-blue-400 leading-relaxed focus:outline-none focus:border-blue-500 resize-none mb-4 min-h-[360px]" placeholder="Game event log will generate here automatically..."></textarea>
+
+          <div class="flex items-center gap-3">
+            <button onclick="downloadCSV()" class="flex-1 glow-btn bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg">
+              <i class="fa-solid fa-download"></i> Download CSV Log
+            </button>
+            <button onclick="copyCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-700">
+              <i class="fa-regular fa-copy"></i> Copy CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="tabContentStudio" class="w-full flex-1 hidden flex-col">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+      
+      <!-- Studio Settings Sidebar -->
+      <div class="lg:col-span-4 flex flex-col gap-5">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-palette text-blue-400"></i> Scoreboard Customization
+          </h2>
+
+          <div class="flex flex-col gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Graphic Style</label>
+              <select id="selectStyle" onchange="renderCurrentFrame()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                <option value="espn">1. ESPN Bar (Horizontal)</option>
+                <option value="stacked">2. Stacked Vertical Banner</option>
+                <option value="pill">3. Compact Pill</option>
+                <option value="lower_third">4. Minimalist Lower Third</option>
+                <option value="center_bug">5. Classic Center Bug</option>
+                <option value="college">6. College Sports Strip</option>
+                <option value="floating">7. Floating Cards</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Scoreboard Position / Alignment</label>
+              <select id="selectPosition" onchange="renderCurrentFrame()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                <option value="top_center">Top Center</option>
+                <option value="top_left">Top Left</option>
+                <option value="top_right">Top Right</option>
+                <option value="bottom_center">Bottom Center</option>
+                <option value="bottom_left">Bottom Left</option>
+                <option value="bottom_right">Bottom Right</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Graphic Scale / Size</label>
+              <select id="selectScale" onchange="renderCurrentFrame()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                <option value="1.0">Small (1.0x)</option>
+                <option value="1.25">Medium (1.25x)</option>
+                <option value="1.5" selected>Large (1.5x - Default)</option>
+                <option value="1.75">Very Large (1.75x)</option>
+                <option value="2.0">Extra Large (2.0x)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5 font-medium">Studio Preset Color Theme</label>
+              <select id="selectPresetTheme" onchange="renderCurrentFrame()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                <option value="modern_dark">Modern Dark Broadcast</option>
+                <option value="broadcast_blue">Classic Sports Blue</option>
+                <option value="vibrant_neon">Vibrant Neon</option>
+                <option value="high_contrast_gold">High Contrast Gold</option>
+                <option value="crimson_pulse">Crimson Pulse</option>
+                <option value="minimal_slate">Minimal Slate</option>
+              </select>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800">
+              <button id="btnRecordWebm" onclick="startWebmExport()" class="w-full glow-btn bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30">
+                <i class="fa-solid fa-hard-drive"></i> Save & Export Directly to Disk
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- iMovie Helper Box -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-blue-400 mb-2 flex items-center gap-2">
+            <i class="fa-brands fa-apple"></i> iMovie Export Helper
+          </h2>
+          <p class="text-xs text-slate-400 mb-3 leading-relaxed">
+            Convert exported WebM files to transparent Apple ProRes 4444 MOV using Terminal:
+          </p>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-[11px] text-slate-300 break-all relative mb-3">
+            <span id="ffmpegCommand">ffmpeg -c:v libvpx-vp9 -i input.webm -c:v prores_ks -profile:v 4 -pix_fmt yuva444p10le output.mov</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button onclick="copyFfmpegCommand()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 border border-slate-700">
+              <i class="fa-regular fa-copy"></i> Copy Command
+            </button>
+            <button onclick="downloadBatchScript()" class="bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 border border-slate-700">
+              <i class="fa-solid fa-terminal"></i> Download .sh Script
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Canvas Preview -->
+      <div class="lg:col-span-8 flex flex-col gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-desktop text-blue-400"></i> 16:9 Broadcast Preview
+            </span>
+            <span id="canvasTimestampDisplay" class="text-xs font-mono text-blue-400 font-bold">00:00 / 00:00</span>
+          </div>
+
+          <div class="w-full aspect-video rounded-xl overflow-hidden border border-slate-800 preview-dark-bg relative shadow-2xl">
+            <canvas id="previewCanvas" width="1920" height="1080" class="w-full h-full object-contain"></canvas>
+          </div>
+
+          <div class="mt-4 flex flex-col gap-2">
+            <input type="range" id="timeScrubber" min="0" max="100" value="0" step="0.1" oninput="onScrub(this.value)" class="w-full accent-blue-500 bg-slate-800 h-2 rounded-lg cursor-pointer">
+            
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <button id="btnPlayPreview" onclick="togglePreviewPlay()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold p-2.5 rounded-xl text-xs w-28 flex items-center justify-center gap-1.5">
+                  <i id="previewPlayIcon" class="fa-solid fa-play"></i> <span id="previewPlayText">Play</span>
+                </button>
+              </div>
+              <span class="text-[11px] text-slate-500 font-medium">Streams video directly to file without memory buffering</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentTab = 'logger';
+    let matchStarted = false;
+    let setInProgress = false;
+    let timerRunning = false;
+    let secondsElapsed = 0;
+    let timerInterval = null;
+
+    let currentSet = 1;
+    let team1Score = 0;
+    let team2Score = 0;
+    let team1SetsWon = 0;
+    let team2SetsWon = 0;
+    let activeServe = 1;
+    let courtSwapped = false;
+
+    let setScoresHistory = [];
+    let activeBannerMessage = '';
+    let logLines = [];
+
+    // Renderer & Scrubber state
+    let parsedEvents = [];
+    let totalMatchDuration = 0;
+    let previewSeconds = 0;
+    let isPreviewPlaying = false;
+    let previewAnimFrame = null;
+    let isExportinging = false;
+
+    function setDefaultDateTime() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+
+      document.getElementById('matchDate').value = `${year}-${month}-${day}`;
+      document.getElementById('matchStartTime').value = `${hours}:${minutes}`;
+    }
+
+    const PRESET_THEMES = {
+      modern_dark: { primaryBg: '#090d16', secondaryBg: '#1e293b', accent: '#3b82f6', text: '#ffffff', highlight: '#f59e0b' },
+      broadcast_blue: { primaryBg: '#1e3a8a', secondaryBg: '#1d4ed8', accent: '#60a5fa', text: '#ffffff', highlight: '#facc15' },
+      vibrant_neon: { primaryBg: '#0f172a', secondaryBg: '#06b6d4', accent: '#ec4899', text: '#ffffff', highlight: '#10b981' },
+      high_contrast_gold: { primaryBg: '#18181b', secondaryBg: '#27272a', accent: '#eab308', text: '#ffffff', highlight: '#eab308' },
+      crimson_pulse: { primaryBg: '#450a0a', secondaryBg: '#991b1b', accent: '#f87171', text: '#ffffff', highlight: '#f59e0b' },
+      minimal_slate: { primaryBg: '#334155', secondaryBg: '#475569', accent: '#94a3b8', text: '#ffffff', highlight: '#38bdf8' }
+    };
+
+    function updateControlStates() {
+      document.getElementById('btnPointLeft').disabled = !setInProgress;
+      document.getElementById('btnPointRight').disabled = !setInProgress;
+      document.getElementById('btnServeLeft').disabled = !setInProgress;
+      document.getElementById('btnServeRight').disabled = !setInProgress;
+      document.getElementById('btnTimeoutLeft').disabled = !setInProgress;
+      document.getElementById('btnTimeoutRight').disabled = !setInProgress;
+
+      document.getElementById('btnApplyOverride').disabled = !setInProgress;
+
+      document.getElementById('btnStartMatch').disabled = matchStarted;
+      document.getElementById('btnStartSet').disabled = !matchStarted || setInProgress;
+      document.getElementById('btnEndSet').disabled = !setInProgress;
+      document.getElementById('btnEndMatch').disabled = !matchStarted || setInProgress;
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-5 right-5 bg-blue-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-2xl z-50 animate-bounce';
+      toast.innerText = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const btnLogger = document.getElementById('tabBtnLogger');
+      const btnStudio = document.getElementById('tabBtnStudio');
+      const contentLogger = document.getElementById('tabContentLogger');
+      const contentStudio = document.getElementById('tabContentStudio');
+
+      if (tab === 'logger') {
+        btnLogger.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all bg-blue-600 text-white shadow-lg";
+        btnStudio.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white";
+        contentLogger.classList.remove('hidden');
+        contentStudio.classList.add('hidden');
+      } else {
+        btnStudio.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all bg-blue-600 text-white shadow-lg";
+        btnLogger.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-white";
+        contentStudio.classList.remove('hidden');
+        contentLogger.classList.add('hidden');
+        
+        parseAndInitStudio();
+      }
+    }
+
+    function formatTime(totalSecs) {
+      const m = Math.floor(totalSecs / 60);
+      const s = Math.floor(totalSecs % 60);
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function parseTime(str) {
+      if (!str) return 0;
+      const pts = str.split(':');
+      if (pts.length !== 2) return 0;
+      return parseInt(pts[0], 10) * 60 + parseInt(pts[1], 10);
+    }
+
+    function updateTeamNames() {
+      const t1 = document.getElementById('team1Name').value || 'Team 1';
+      const t2 = document.getElementById('team2Name').value || 'Team 2';
+      
+      const leftName = courtSwapped ? t2 : t1;
+      const rightName = courtSwapped ? t1 : t2;
+
+      document.getElementById('leftDisplayLabel').innerText = leftName;
+      document.getElementById('rightDisplayLabel').innerText = rightName;
+      document.getElementById('btnLeftTeamSub').innerText = leftName;
+      document.getElementById('btnRightTeamSub').innerText = rightName;
+
+      document.getElementById('overrideLeftLabel').innerText = `${leftName} Score`;
+      document.getElementById('overrideRightLabel').innerText = `${rightName} Score`;
+    }
+
+    document.getElementById('team1Name').addEventListener('input', updateTeamNames);
+    document.getElementById('team2Name').addEventListener('input', updateTeamNames);
+
+    function startTimer() {
+      if (!timerRunning) {
+        timerRunning = true;
+        timerInterval = setInterval(() => {
+          secondsElapsed++;
+          document.getElementById('timerDisplay').innerText = formatTime(secondsElapsed);
+        }, 1000);
+        document.getElementById('pauseIcon').className = 'fa-solid fa-pause';
+        document.getElementById('pauseText').innerText = 'Pause';
+      }
+    }
+
+    function toggleTimer() {
+      if (!matchStarted) return;
+      if (timerRunning) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('pauseIcon').className = 'fa-solid fa-play';
+        document.getElementById('pauseText').innerText = 'Resume';
+      } else {
+        startTimer();
+      }
+    }
+
+    function startMatch() {
+      if (matchStarted) return;
+      const t1 = document.getElementById('team1Name').value.trim() || 'Team 1';
+      const t2 = document.getElementById('team2Name').value.trim() || 'Team 2';
+      const eventTitle = document.getElementById('eventTitle').value.trim() || '2026 ISSA 14U';
+      const matchDate = document.getElementById('matchDate').value;
+      const matchStartTime = document.getElementById('matchStartTime').value;
+      const setsToWin = document.getElementById('setsToWin').value;
+
+      matchStarted = true;
+      logLines = [];
+      setScoresHistory = [];
+      
+      appendLog(`Team1, ${t1}`);
+      appendLog(`Team2, ${t2}`);
+      appendLog(`EventTitle, ${eventTitle}`);
+      appendLog(`MatchDate, ${matchDate}`);
+      appendLog(`MatchStartTime, ${matchStartTime}`);
+      appendLog(`SetsToWin, ${setsToWin}`);
+      appendLog(`00:00, START_MATCH`);
+
+      document.getElementById('btnToggleTimer').disabled = false;
+
+      startSet(1);
+      startTimer();
+    }
+
+    function resetMatch() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      matchStarted = false;
+      setInProgress = false;
+      secondsElapsed = 0;
+      currentSet = 1;
+      team1Score = 0;
+      team2Score = 0;
+      team1SetsWon = 0;
+      team2SetsWon = 0;
+      courtSwapped = false;
+      logLines = [];
+      setScoresHistory = [];
+      activeBannerMessage = '';
+
+      document.getElementById('timerDisplay').innerText = "00:00";
+      document.getElementById('currentSetLabel').innerText = "Set 1 | Sets Score: 0 - 0";
+      document.getElementById('btnToggleTimer').disabled = true;
+      document.getElementById('csvLogOutput').value = '';
+      document.getElementById('lineCountBadge').innerText = '0 events';
+
+      updateControlStates();
+      updateScoreDisplays();
+      updateTeamNames();
+      showToast("Match scores and log reset. Match setup retained.");
+    }
+
+    function newMatch() {
+      resetMatch();
+      document.getElementById('team1Name').value = 'Team 1';
+      document.getElementById('team2Name').value = 'Team 2';
+      document.getElementById('eventTitle').value = '2026 ISSA 14U';
+      document.getElementById('setsToWin').value = '2';
+      setDefaultDateTime();
+      updateTeamNames();
+      showToast("New match initialized with default settings.");
+    }
+
+    function startSet(setNum) {
+      if (!matchStarted) return;
+      if (!setNum) setNum = currentSet;
+      
+      setInProgress = true;
+      team1Score = 0;
+      team2Score = 0;
+      updateScoreDisplays();
+      appendLog(`${formatTime(secondsElapsed)}, START_SET, ${setNum}`);
+      updateServeDisplay();
+      updateControlStates();
+    }
+
+    function logPointForSlot(slot) {
+      if (!setInProgress) return;
+
+      const targetTeam = slot === 'left' ? (courtSwapped ? 2 : 1) : (courtSwapped ? 1 : 2);
+
+      if (targetTeam === 1) team1Score++;
+      else team2Score++;
+
+      activeServe = targetTeam;
+      updateScoreDisplays();
+      updateServeDisplay();
+      appendLog(`${formatTime(secondsElapsed)}, POINT, ${targetTeam}`);
+    }
+
+    function applyScoreOverride() {
+      if (!setInProgress) {
+        showToast("Score override can only be performed while a set is in progress.");
+        return;
+      }
+
+      const rawLeft = document.getElementById('overrideLeftInput').value.trim();
+      const rawRight = document.getElementById('overrideRightInput').value.trim();
+
+      if (rawLeft === '' || rawRight === '') {
+        showToast("Please enter scores for both sides before applying.");
+        return;
+      }
+
+      const leftVal = parseInt(rawLeft, 10);
+      const rightVal = parseInt(rawRight, 10);
+
+      if (isNaN(leftVal) || isNaN(rightVal) || leftVal < 0 || rightVal < 0) {
+        showToast("Please enter valid non-negative numbers for scores.");
+        return;
+      }
+
+      if (courtSwapped) {
+        team2Score = leftVal;
+        team1Score = rightVal;
+      } else {
+        team1Score = leftVal;
+        team2Score = rightVal;
+      }
+
+      updateScoreDisplays();
+      appendLog(`${formatTime(secondsElapsed)}, OVERRIDE_SCORE, ${team1Score}, ${team2Score}`);
+
+      document.getElementById('overrideLeftInput').value = '';
+      document.getElementById('overrideRightInput').value = '';
+      showToast(`Score overridden to ${leftVal} - ${rightVal}`);
+    }
+
+    function setServeForSlot(slot) {
+      if (!setInProgress) return;
+      const targetTeam = slot === 'left' ? (courtSwapped ? 2 : 1) : (courtSwapped ? 1 : 2);
+      activeServe = targetTeam;
+      updateServeDisplay();
+      appendLog(`${formatTime(secondsElapsed)}, SERVE, ${targetTeam}`);
+    }
+
+    function logTimeoutForSlot(slot) {
+      if (!setInProgress) return;
+      const targetTeam = slot === 'left' ? (courtSwapped ? 2 : 1) : (courtSwapped ? 1 : 2);
+      const tName = targetTeam === 1 ? (document.getElementById('team1Name').value || 'Team 1') : (document.getElementById('team2Name').value || 'Team 2');
+      
+      setBannerMessage(`TIMEOUT - ${tName.toUpperCase()}`);
+      appendLog(`${formatTime(secondsElapsed)}, TIMEOUT, ${targetTeam}`);
+    }
+
+    function logSwap() {
+      courtSwapped = !courtSwapped;
+      updateTeamNames();
+      updateScoreDisplays();
+      updateServeDisplay();
+      if (matchStarted) {
+        appendLog(`${formatTime(secondsElapsed)}, SWAP`);
+      }
+      showToast("Court side positions swapped!");
+    }
+
+    function setBannerMessage(msg) {
+      activeBannerMessage = msg;
+      if (matchStarted) {
+        appendLog(`${formatTime(secondsElapsed)}, BANNER, ${msg}`);
+      }
+      showToast(`Banner Set: ${msg}`);
+    }
+
+    function clearBannerMessage() {
+      activeBannerMessage = '';
+      if (matchStarted) {
+        appendLog(`${formatTime(secondsElapsed)}, CLEAR_BANNER`);
+      }
+      showToast("Banner cleared!");
+    }
+
+    function applyCustomBannerMessage() {
+      const input = document.getElementById('customBannerInput');
+      if (input.value.trim()) {
+        setBannerMessage(input.value.trim().toUpperCase());
+        input.value = '';
+      }
+    }
+
+    function undoLastAction() {
+      if (logLines.length === 0) return;
+      logLines.pop();
+      document.getElementById('csvLogOutput').value = logLines.join('\n');
+      document.getElementById('lineCountBadge').innerText = `${logLines.length} events`;
+      showToast("Undid last event line");
+    }
+
+    function endSet() {
+      if (!setInProgress) return;
+      
+      setInProgress = false;
+      setScoresHistory.push({ set: currentSet, t1: team1Score, t2: team2Score });
+
+      if (team1Score > team2Score) team1SetsWon++;
+      else if (team2Score > team1Score) team2SetsWon++;
+
+      appendLog(`${formatTime(secondsElapsed)}, END_SET`);
+
+      currentSet++;
+      document.getElementById('currentSetLabel').innerText = `Set ${currentSet} | Sets Score: ${team1SetsWon} - ${team2SetsWon}`;
+      updateScoreDisplays();
+      updateControlStates();
+    }
+
+    function endMatch() {
+      if (!matchStarted || setInProgress) return;
+      appendLog(`${formatTime(secondsElapsed)}, END_MATCH`);
+      clearInterval(timerInterval);
+      timerRunning = false;
+      matchStarted = false;
+      updateControlStates();
+      showToast("Match finished!");
+    }
+
+    function updateScoreDisplays() {
+      const leftScore = courtSwapped ? team2Score : team1Score;
+      const rightScore = courtSwapped ? team1Score : team2Score;
+      const leftSets = courtSwapped ? team2SetsWon : team1SetsWon;
+      const rightSets = courtSwapped ? team1SetsWon : team2SetsWon;
+
+      document.getElementById('leftScoreDisplay').innerText = leftScore;
+      document.getElementById('rightScoreDisplay').innerText = rightScore;
+      document.getElementById('leftSetsWon').innerText = leftSets;
+      document.getElementById('rightSetsWon').innerText = rightSets;
+    }
+
+    function updateServeDisplay() {
+      const t1 = document.getElementById('team1Name').value || 'Team 1';
+      const t2 = document.getElementById('team2Name').value || 'Team 2';
+      document.getElementById('serveIndicator').innerHTML = `Active Serve: <span class="font-bold text-white">${activeServe === 1 ? t1 : t2}</span>`;
+    }
+
+    function appendLog(line) {
+      logLines.push(line);
+      const textEl = document.getElementById('csvLogOutput');
+      textEl.value = logLines.join('\n');
+      textEl.scrollTop = textEl.scrollHeight;
+      document.getElementById('lineCountBadge').innerText = `${logLines.length} events`;
+    }
+
+    function onCSVLogEdited() {
+      const raw = document.getElementById('csvLogOutput').value;
+      logLines = raw.split('\n').filter(l => l.trim().length > 0);
+      document.getElementById('lineCountBadge').innerText = `${logLines.length} events`;
+    }
+
+    function copyCSV() {
+      const raw = document.getElementById('csvLogOutput').value;
+      if (!raw) return;
+      navigator.clipboard.writeText(raw);
+      showToast("CSV Log copied!");
+    }
+
+    function downloadCSV() {
+      const raw = document.getElementById('csvLogOutput').value;
+      if (!raw) return;
+      const blob = new Blob([raw], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'volleyball_match_log.csv';
+      a.click();
+    }
+
+    function parseAndInitStudio() {
+      const raw = document.getElementById('csvLogOutput').value;
+      const lines = raw.split('\n');
+
+      let t1 = 'Team 1';
+      let t2 = 'Team 2';
+      let title = '2026 ISSA 14U';
+      let mDate = '';
+      let mTime = '';
+
+      parsedEvents = [];
+
+      lines.forEach(line => {
+        const parts = line.split(',').map(s => s.trim());
+        if (parts.length < 2) return;
+
+        if (parts[0] === 'Team1') t1 = parts[1];
+        else if (parts[0] === 'Team2') t2 = parts[1];
+        else if (parts[0] === 'EventTitle') title = parts[1];
+        else if (parts[0] === 'MatchDate') mDate = parts[1];
+        else if (parts[0] === 'MatchStartTime') mTime = parts[1];
+        else {
+          const secs = parseTime(parts[0]);
+          parsedEvents.push({
+            time: secs,
+            type: parts[1],
+            val: parts[2] || null,
+            val2: parts[3] || null
+          });
+        }
+      });
+
+      document.getElementById('team1Name').value = t1;
+      document.getElementById('team2Name').value = t2;
+      document.getElementById('eventTitle').value = title;
+      if (mDate) document.getElementById('matchDate').value = mDate;
+      if (mTime) document.getElementById('matchStartTime').value = mTime;
+
+      totalMatchDuration = parsedEvents.length > 0 ? parsedEvents[parsedEvents.length - 1].time + 5 : 60;
+      document.getElementById('timeScrubber').max = totalMatchDuration;
+      
+      previewSeconds = 0;
+      document.getElementById('timeScrubber').value = 0;
+      renderCurrentFrame();
+    }
+
+    function evaluateStateAtTime(targetSecs) {
+      let state = {
+        team1Name: document.getElementById('team1Name').value || 'Team 1',
+        team2Name: document.getElementById('team2Name').value || 'Team 2',
+        eventTitle: document.getElementById('eventTitle').value || '2026 ISSA 14U',
+        set: 1,
+        t1Score: 0,
+        t2Score: 0,
+        t1SetsWon: 0,
+        t2SetsWon: 0,
+        activeServe: 1,
+        swapped: false,
+        history: [],
+        banner: '',
+        isSetLive: false,
+        isMatchEnded: false
+      };
+
+      for (let ev of parsedEvents) {
+        if (ev.time > targetSecs) break;
+
+        if (ev.type === 'START_MATCH') {
+          state.isMatchEnded = false;
+        } else if (ev.type === 'START_SET') {
+          if (ev.val) state.set = parseInt(ev.val, 10);
+          state.t1Score = 0;
+          state.t2Score = 0;
+          state.isSetLive = true;
+        } else if (ev.type === 'POINT') {
+          if (ev.val === '1') state.t1Score++;
+          else if (ev.val === '2') state.t2Score++;
+          state.activeServe = parseInt(ev.val, 10);
+        } else if (ev.type === 'OVERRIDE_SCORE') {
+          if (ev.val !== null && ev.val2 !== null) {
+            state.t1Score = parseInt(ev.val, 10);
+            state.t2Score = parseInt(ev.val2, 10);
+          }
+        } else if (ev.type === 'SERVE') {
+          state.activeServe = parseInt(ev.val, 10);
+        } else if (ev.type === 'SWAP') {
+          state.swapped = !state.swapped;
+        } else if (ev.type === 'BANNER') {
+          state.banner = ev.val;
+        } else if (ev.type === 'CLEAR_BANNER') {
+          state.banner = '';
+        } else if (ev.type === 'END_SET') {
+          state.history.push({ set: state.set, t1: state.t1Score, t2: state.t2Score });
+          if (state.t1Score > state.t2Score) state.t1SetsWon++;
+          else if (state.t2Score > state.t1Score) state.t2SetsWon++;
+          state.isSetLive = false;
+        } else if (ev.type === 'END_MATCH') {
+          state.isMatchEnded = true;
+          state.isSetLive = false;
+        }
+      }
+
+      return state;
+    }
+
+    function getAnchorCoordinates(posKey, baseWidth, baseHeight, scaleFactor = 1.0, marginX = 80, marginY = 60) {
+      const canvasW = 1920;
+      const canvasH = 1080;
+      
+      const graphicWidth = baseWidth * scaleFactor;
+      const graphicHeight = baseHeight * scaleFactor;
+
+      let x = marginX;
+      let y = marginY;
+
+      switch (posKey) {
+        case 'top_left':
+          x = marginX; y = marginY; break;
+        case 'top_center':
+          x = (canvasW - graphicWidth) / 2; y = marginY; break;
+        case 'top_right':
+          x = canvasW - graphicWidth - marginX; y = marginY; break;
+        case 'bottom_left':
+          x = marginX; y = canvasH - graphicHeight - marginY; break;
+        case 'bottom_center':
+          x = (canvasW - graphicWidth) / 2; y = canvasH - graphicHeight - marginY; break;
+        case 'bottom_right':
+          x = canvasW - graphicWidth - marginX; y = canvasH - graphicHeight - marginY; break;
+        default:
+          x = (canvasW - graphicWidth) / 2; y = marginY;
+      }
+      return { x, y, width: graphicWidth, height: graphicHeight };
+    }
+
+    function renderCurrentFrame() {
+      const canvas = document.getElementById('previewCanvas');
+      const ctx = canvas.getContext('2d');
+      const style = document.getElementById('selectStyle').value;
+      const posKey = document.getElementById('selectPosition').value;
+      const scaleFactor = parseFloat(document.getElementById('selectScale').value || '1.5');
+      const themeKey = document.getElementById('selectPresetTheme').value;
+      const theme = PRESET_THEMES[themeKey] || PRESET_THEMES.modern_dark;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const st = evaluateStateAtTime(previewSeconds);
+      document.getElementById('canvasTimestampDisplay').innerText = `${formatTime(previewSeconds)} / ${formatTime(totalMatchDuration)}`;
+
+      if (style === 'espn') drawESPNBar(ctx, st, theme, posKey, scaleFactor);
+      else if (style === 'stacked') drawStackedBanner(ctx, st, theme, posKey, scaleFactor);
+      else if (style === 'pill') drawPillStyle(ctx, st, theme, posKey, scaleFactor);
+      else if (style === 'lower_third') drawLowerThird(ctx, st, theme, posKey, scaleFactor);
+      else if (style === 'center_bug') drawCenterBug(ctx, st, theme, posKey, scaleFactor);
+      else if (style === 'college') drawCollegeStrip(ctx, st, theme, posKey, scaleFactor);
+      else if (style === 'floating') drawFloatingCards(ctx, st, theme, posKey, scaleFactor);
+    }
+
+    function drawBannerOverlay(ctx, x, y, width, bannerMsg, scale) {
+      if (!bannerMsg) return;
+      ctx.save();
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(x, y, width, 36 * scale);
+      ctx.fillStyle = '#000000';
+      ctx.font = `900 ${20 * scale}px Inter`;
+      ctx.textAlign = 'center';
+      ctx.fillText(bannerMsg, x + (width / 2), y + (25 * scale));
+      ctx.restore();
+    }
+
+    function drawESPNBar(ctx, st, theme, posKey, scale) {
+      const baseW = 880, baseH = 64;
+      const { x, y } = getAnchorCoordinates(posKey, baseW, baseH, scale, 80, 60);
+
+      const t1Name = st.swapped ? st.team2Name : st.team1Name;
+      const t2Name = st.swapped ? st.team1Name : st.team2Name;
+      const t1Score = st.swapped ? st.t2Score : st.t1Score;
+      const t2Score = st.swapped ? st.t1Score : st.t2Score;
+      const t1Sets = st.swapped ? st.t2SetsWon : st.t1SetsWon;
+      const t2Sets = st.swapped ? st.t1SetsWon : st.t2SetsWon;
+      const serveTeam = st.swapped ? (st.activeServe === 1 ? 2 : 1) : st.activeServe;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.fillRect(0, 0, baseW, baseH);
+
+      ctx.fillStyle = theme.secondaryBg;
+      ctx.fillRect(0, 0, 240, baseH);
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 28px Inter';
+      ctx.fillText(t1Name.toUpperCase(), 20, 43);
+
+      ctx.fillStyle = theme.accent;
+      ctx.fillRect(240, 0, 80, baseH);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 32px JetBrains Mono';
+      ctx.fillText(t1Score, 262, 45);
+
+      ctx.fillStyle = theme.secondaryBg;
+      ctx.fillRect(320, 0, 240, baseH);
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 28px Inter';
+      ctx.fillText(t2Name.toUpperCase(), 340, 43);
+
+      ctx.fillStyle = theme.accent;
+      ctx.fillRect(560, 0, 80, baseH);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 32px JetBrains Mono';
+      ctx.fillText(t2Score, 582, 45);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.fillRect(640, 0, 240, baseH);
+      ctx.fillStyle = theme.highlight;
+      ctx.font = '800 18px Inter';
+      ctx.fillText(`SETS: ${t1Sets} - ${t2Sets}`, 655, 30);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '700 14px Inter';
+      ctx.fillText(`SET ${st.set}`, 655, 52);
+
+      if (st.isSetLive) {
+        if (serveTeam === 1) drawVolleyballIcon(ctx, 215, 32, 10, theme.highlight);
+        else if (serveTeam === 2) drawVolleyballIcon(ctx, 535, 32, 10, theme.highlight);
+      }
+
+      ctx.restore();
+
+      drawBannerOverlay(ctx, x, y + (baseH * scale), baseW * scale, st.banner, scale);
+    }
+
+    function drawStackedBanner(ctx, st, theme, posKey, scale) {
+      const historyCols = st.history.length;
+      const setColWidth = 50;
+      const nameWidth = 200;
+      const activeScoreWidth = 90;
+      
+      const showLiveBox = st.isSetLive && !st.isMatchEnded;
+      const baseW = nameWidth + (historyCols * setColWidth) + (showLiveBox ? activeScoreWidth : 0);
+      const baseH = 145;
+      const { x, y } = getAnchorCoordinates(posKey, baseW, baseH, scale, 80, 60);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.fillRect(0, 0, baseW, baseH);
+
+      ctx.fillStyle = theme.secondaryBg;
+      ctx.fillRect(0, 0, baseW, 35);
+      ctx.fillStyle = theme.highlight;
+      ctx.font = '800 13px Inter';
+      ctx.fillText(st.eventTitle.toUpperCase(), 15, 22);
+
+      ctx.fillStyle = theme.secondaryBg;
+      ctx.fillRect(0, 35, nameWidth, 55);
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 22px Inter';
+      ctx.fillText(st.team1Name.toUpperCase(), 18, 70);
+
+      let currentX = nameWidth;
+      st.history.forEach((h) => {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(currentX, 35, setColWidth - 2, 55);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '800 20px JetBrains Mono';
+        ctx.fillText(h.t1, currentX + 12, 70);
+        currentX += setColWidth;
+      });
+
+      if (showLiveBox) {
+        ctx.fillStyle = theme.accent;
+        ctx.fillRect(currentX, 35, activeScoreWidth, 55);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 30px JetBrains Mono';
+        ctx.fillText(st.t1Score, currentX + 28, 73);
+      }
+
+      if (showLiveBox && st.activeServe === 1) {
+        drawVolleyballIcon(ctx, nameWidth - 20, 62, 8, theme.highlight);
+      }
+
+      ctx.fillStyle = theme.secondaryBg;
+      ctx.fillRect(0, 90, nameWidth, 55);
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 22px Inter';
+      ctx.fillText(st.team2Name.toUpperCase(), 18, 125);
+
+      currentX = nameWidth;
+      st.history.forEach((h) => {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(currentX, 90, setColWidth - 2, 55);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '800 20px JetBrains Mono';
+        ctx.fillText(h.t2, currentX + 12, 125);
+        currentX += setColWidth;
+      });
+
+      if (showLiveBox) {
+        ctx.fillStyle = theme.accent;
+        ctx.fillRect(currentX, 90, activeScoreWidth, 55);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 30px JetBrains Mono';
+        ctx.fillText(st.t2Score, currentX + 28, 128);
+      }
+
+      if (showLiveBox && st.activeServe === 2) {
+        drawVolleyballIcon(ctx, nameWidth - 20, 117, 8, theme.highlight);
+      }
+
+      ctx.restore();
+
+      drawBannerOverlay(ctx, x, y + (baseH * scale), baseW * scale, st.banner, scale);
+    }
+
+    function drawPillStyle(ctx, st, theme, posKey, scale) {
+      const baseW = 860, baseH = 76;
+      const { x, y } = getAnchorCoordinates(posKey, baseW, baseH, scale, 80, 60);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, baseW, baseH, 38);
+      ctx.fill();
+
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 28px Inter';
+      ctx.fillText(st.team1Name.toUpperCase(), 40, 48);
+      ctx.fillStyle = theme.accent;
+      ctx.font = '900 32px JetBrains Mono';
+      ctx.fillText(st.t1Score, 220, 50);
+
+      ctx.fillStyle = theme.secondaryBg;
+      ctx.beginPath();
+      ctx.roundRect(320, 14, 220, 48, 24);
+      ctx.fill();
+      ctx.fillStyle = theme.highlight;
+      ctx.font = '800 16px Inter';
+      ctx.fillText(`SET ${st.set} (${st.t1SetsWon}-${st.t2SetsWon})`, 355, 44);
+
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 28px Inter';
+      ctx.fillText(st.team2Name.toUpperCase(), 570, 48);
+      ctx.fillStyle = theme.accent;
+      ctx.font = '900 32px JetBrains Mono';
+      ctx.fillText(st.t2Score, 750, 50);
+
+      if (st.isSetLive) {
+        if (st.activeServe === 1) drawVolleyballIcon(ctx, 185, 38, 9, theme.highlight);
+        else if (st.activeServe === 2) drawVolleyballIcon(ctx, 715, 38, 9, theme.highlight);
+      }
+
+      ctx.restore();
+
+      drawBannerOverlay(ctx, x, y + (baseH * scale) + 5, baseW * scale, st.banner, scale);
+    }
+
+    function drawLowerThird(ctx, st, theme, posKey, scale) {
+      const baseW = 1680, baseH = 90;
+      const { x, y } = getAnchorCoordinates(posKey, baseW, baseH, scale, 80, 50);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.fillRect(0, 0, baseW, baseH);
+
+      ctx.fillStyle = theme.accent;
+      ctx.fillRect(0, 0, 16, baseH);
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 32px Inter';
+      ctx.fillText(st.team1Name.toUpperCase(), 40, 56);
+
+      ctx.fillStyle = theme.highlight;
+      ctx.font = '900 38px JetBrains Mono';
+      ctx.fillText(st.t1Score, 280, 58);
+
+      ctx.fillStyle = theme.secondaryBg;
+      ctx.fillRect(600, 20, 480, 50);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 16px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${st.eventTitle} | SETS: ${st.t1SetsWon}-${st.t2SetsWon}`, 840, 50);
+      ctx.textAlign = 'left';
+
+      ctx.fillStyle = theme.text;
+      ctx.font = '900 32px Inter';
+      ctx.fillText(st.team2Name.toUpperCase(), baseW - 320, 56);
+
+      ctx.fillStyle = theme.highlight;
+      ctx.font = '900 38px JetBrains Mono';
+      ctx.fillText(st.t2Score, baseW - 100, 58);
+
+      ctx.restore();
+
+      drawBannerOverlay(ctx, x, y - (36 * scale), baseW * scale, st.banner, scale);
+    }
+
+    function drawCenterBug(ctx, st, theme, posKey, scale) {
+      const baseW = 440, baseH = 100;
+      const { x, y } = getAnchorCoordinates(posKey, baseW, baseH, scale, 80, 60);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.fillRect(0, 0, baseW, baseH);
+
+      ctx.fillStyle = theme.secondaryBg; ctx.fillRect(0, 0, baseW / 2, 48);
+      ctx.fillStyle = theme.accent; ctx.fillRect(baseW / 2, 0, baseW / 2, 48);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 22px Inter';
+      ctx.fillText(st.team1Name.toUpperCase(), 20, 32);
+      ctx.fillText(st.team2Name.toUpperCase(), baseW / 2 + 20, 32);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.fillRect(0, 48, baseW, 52);
+
+      ctx.fillStyle = theme.highlight;
+      ctx.font = '900 32px JetBrains Mono';
+      ctx.fillText(`${st.t1Score}   -   ${st.t2Score}`, 145, 86);
+
+      ctx.restore();
+
+      drawBannerOverlay(ctx, x, y + (baseH * scale), baseW * scale, st.banner, scale);
+    }
+
+    function drawCollegeStrip(ctx, st, theme, posKey, scale) {
+      const baseW = 1920, baseH = 54;
+      let y = 0;
+      if (posKey.startsWith('bottom')) y = 1080 - (baseH * scale);
+
+      ctx.save();
+      ctx.translate(0, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = theme.primaryBg;
+      ctx.fillRect(0, 0, baseW, baseH);
+
+      ctx.fillStyle = theme.text; ctx.font = '900 24px Inter';
+      ctx.fillText(st.team1Name.toUpperCase(), 320, 36);
+      ctx.fillStyle = theme.highlight; ctx.font = '900 28px JetBrains Mono';
+      ctx.fillText(st.t1Score, 500, 38);
+
+      ctx.fillStyle = theme.accent; ctx.font = '800 20px Inter';
+      ctx.fillText(`${st.eventTitle} | SET ${st.set} (${st.t1SetsWon}-${st.t2SetsWon})`, 760, 35);
+
+      ctx.fillStyle = theme.text; ctx.font = '900 24px Inter';
+      ctx.fillText(st.team2Name.toUpperCase(), 1320, 36);
+      ctx.fillStyle = theme.highlight; ctx.font = '900 28px JetBrains Mono';
+      ctx.fillText(st.t2Score, 1500, 38);
+
+      ctx.restore();
+
+      drawBannerOverlay(ctx, 0, posKey.startsWith('bottom') ? y - (36 * scale) : y + (baseH * scale), baseW * scale, st.banner, scale);
+    }
+
+    function drawFloatingCards(ctx, st, theme, posKey, scale) {
+      const baseW = 560, baseH = 90;
+      const { x, y } = getAnchorCoordinates(posKey, baseW, baseH, scale, 80, 60);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = theme.secondaryBg; ctx.fillRect(0, 0, 270, baseH);
+      ctx.fillStyle = theme.accent; ctx.fillRect(290, 0, 270, baseH);
+
+      ctx.fillStyle = '#ffffff'; ctx.font = '900 26px Inter';
+      ctx.fillText(st.team1Name.toUpperCase(), 20, 38);
+      ctx.font = '900 32px JetBrains Mono';
+      ctx.fillText(st.t1Score, 20, 76);
+
+      ctx.font = '900 26px Inter';
+      ctx.fillText(st.team2Name.toUpperCase(), 310, 38);
+      ctx.font = '900 32px JetBrains Mono';
+      ctx.fillText(st.t2Score, 310, 76);
+
+      ctx.restore();
+
+      drawBannerOverlay(ctx, x, y + (baseH * scale) + 5, baseW * scale, st.banner, scale);
+    }
+
+    function drawVolleyballIcon(ctx, x, y, radius, color = '#f59e0b') {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function onScrub(val) {
+      previewSeconds = parseFloat(val);
+      renderCurrentFrame();
+    }
+
+    function togglePreviewPlay() {
+      isPreviewPlaying = !isPreviewPlaying;
+      const icon = document.getElementById('previewPlayIcon');
+      const txt = document.getElementById('previewPlayText');
+
+      if (isPreviewPlaying) {
+        icon.className = 'fa-solid fa-pause';
+        txt.innerText = 'Pause';
+        animatePreview();
+      } else {
+        icon.className = 'fa-solid fa-play';
+        txt.innerText = 'Play';
+        if (previewAnimFrame) cancelAnimationFrame(previewAnimFrame);
+      }
+    }
+
+    function animatePreview() {
+      if (!isPreviewPlaying) return;
+      previewSeconds += 0.05;
+      if (previewSeconds > totalMatchDuration) previewSeconds = 0;
+      document.getElementById('timeScrubber').value = previewSeconds;
+      renderCurrentFrame();
+      previewAnimFrame = requestAnimationFrame(animatePreview);
+    }
+
+    // Direct Disk Streaming Export with Memory Fallback
+    async function startWebmExport() {
+      if (isExportinging) return;
+
+      const btn = document.getElementById('btnRecordWebm');
+      const canvas = document.getElementById('previewCanvas');
+
+      if (isPreviewPlaying) {
+        togglePreviewPlay();
+      }
+
+      // Check MIME type support
+      const mimeTypes = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm'
+      ];
+      let selectedMime = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+
+      if (!selectedMime) {
+        showToast("WebM recording is not supported on this browser.");
+        return;
+      }
+
+      let writableStream = null;
+      let memoryChunks = [];
+      let isFileSystemAccessSupported = 'showSaveFilePicker' in window;
+
+      // 1. Prompt for Direct-to-Disk location if supported
+      if (isFileSystemAccessSupported) {
+        try {
+          const fileHandle = await window.showSaveFilePicker({
+            suggestedName: 'volleyball_scoreboard_overlay.webm',
+            types: [{
+              description: 'WebM Video File',
+              accept: { 'video/webm': ['.webm'] },
+            }],
+          });
+          writableStream = await fileHandle.createWritable();
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            showToast("Export cancelled by user.");
+            return;
+          }
+          console.warn("Direct file access denied or unsupported. Falling back to memory buffer.", err);
+          writableStream = null;
+        }
+      }
+
+      // 2. Initialize MediaRecorder Stream (Capture 30 FPS for smooth rendering)
+      const stream = canvas.captureStream(30);
+      const track = stream.getVideoTracks()[0];
+
+      let mediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(stream, {
+          mimeType: selectedMime,
+          videoBitsPerSecond: 8000000
+        });
+      } catch (e) {
+        console.error("MediaRecorder creation error:", e);
+        showToast("Error initializing video recorder.");
+        return;
+      }
+
+      isExportinging = true;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Writing to Disk...`;
+
+      // 3. Pipe chunks directly to disk OR buffer in memory
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data && event.data.size > 0) {
+          if (writableStream) {
+            await writableStream.write(event.data);
+          } else {
+            memoryChunks.push(event.data);
+          }
+        }
+      };
+
+      // 4. Finalize File on Recording Stop
+      mediaRecorder.onstop = async () => {
+        if (writableStream) {
+          await writableStream.close();
+          showToast("Export Complete! Video saved directly to disk.");
+        } else if (memoryChunks.length > 0) {
+          const blob = new Blob(memoryChunks, { type: selectedMime });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'volleyball_scoreboard_overlay.webm';
+          a.click();
+          showToast("Export Complete! WebM file downloaded.");
+        }
+
+        isExportinging = false;
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-hard-drive"></i> Save & Export Directly to Disk`;
+      };
+
+      previewSeconds = 0;
+      
+      // Request chunks every 500ms to keep disk stream updated
+      mediaRecorder.start(500);
+      showToast("Rendering & writing video chunks...");
+
+      const step = 0.05; // Advance clock by 0.05 seconds each frame
+      function renderNextFrame() {
+        if (previewSeconds < totalMatchDuration) {
+          renderCurrentFrame();
+          if (track && track.requestFrame) {
+            track.requestFrame();
+          }
+          previewSeconds += step;
+          document.getElementById('timeScrubber').value = previewSeconds;
+          requestAnimationFrame(renderNextFrame);
+        } else {
+          renderCurrentFrame();
+          setTimeout(() => {
+            if (mediaRecorder.state !== 'inactive') {
+              mediaRecorder.stop();
+            }
+          }, 300);
+        }
+      }
+
+      requestAnimationFrame(renderNextFrame);
+    }
+
+    function copyFfmpegCommand() {
+      const cmd = document.getElementById('ffmpegCommand').innerText;
+      navigator.clipboard.writeText(cmd);
+      showToast("Copied ffmpeg command!");
+    }
+
+    function downloadBatchScript() {
+      const scriptContent = `#!/bin/bash
+# Volleyball Match Studio - Batch WebM to Apple ProRes 4444 Converter
+echo "Converting all WebM transparent videos to Apple ProRes 4444 MOV..."
+for f in *.webm; do
+  if [ -f "$f" ]; then
+    echo "Processing $f..."
+    ffmpeg -c:v libvpx-vp9 -i "$f" -c:v prores_ks -profile:v 4 -pix_fmt yuva444p10le "\${f%.*}.mov"
+  fi
+done
+echo "All conversions complete! Ready for iMovie."
+`;
+      const blob = new Blob([scriptContent], { type: 'text/x-sh' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'convert_webm_to_prores.sh';
+      a.click();
+      showToast("Downloaded Batch Converter Script!");
+    }
+
+    setDefaultDateTime();
+    updateTeamNames();
+    updateControlStates();
+  </script>
+</body>
+</html>
